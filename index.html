@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>攝影機與麥克風實驗室 | Webcam & Mic Lab</title>
+<title>攝影機・麥克風・序列埠實驗室 | Webcam · Mic · Serial Lab</title>
 <style>
 :root{
   --bg:#f3f5f8;--panel:#ffffff;--fg:#1b2330;--muted:#5f6b7d;--line:#d8dee8;
@@ -20,18 +20,19 @@ html,body{margin:0;background:var(--bg);color:var(--fg);
 header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
 header h1{font-size:18px;margin:0;font-weight:650}
 header .sub{color:var(--muted);font-size:13px}
-header .spacer{flex:1}
+.spacer{flex:1}
 main{max-width:1400px;margin:0 auto;padding:16px;display:grid;gap:16px;
-  grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-areas:"dev dev" "vid aud" "gal gal"}
-@media (max-width:960px){main{grid-template-columns:minmax(0,1fr);grid-template-areas:"dev" "vid" "aud" "gal";padding:10px}}
+  grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-areas:"dev dev" "vid aud" "ser ser" "gal gal"}
+@media (max-width:960px){main{grid-template-columns:minmax(0,1fr);grid-template-areas:"dev" "vid" "aud" "ser" "gal";padding:10px}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;min-width:0}
 .panel h2{font-size:15px;margin:0 0 10px;font-weight:650}
-#pDev{grid-area:dev}#pVid{grid-area:vid}#pAud{grid-area:aud}#pGal{grid-area:gal}
+#pDev{grid-area:dev}#pVid{grid-area:vid}#pAud{grid-area:aud}#pSer{grid-area:ser}#pGal{grid-area:gal}
 .row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
 label.fld{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
-label.fld select{min-width:150px;max-width:280px}
-select,button,input[type=range]{font:inherit}
-select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg)}
+label.fld select{min-width:130px;max-width:280px}
+select,button,input{font:inherit}
+select,input[type=number],input[type=text]{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg)}
+input[type=number]{width:110px}
 button{padding:7px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;white-space:nowrap}
 button:hover:not(:disabled){border-color:var(--accent)}
 button:disabled{opacity:.45;cursor:not-allowed}
@@ -54,26 +55,38 @@ button.danger{background:var(--danger);border-color:var(--danger);color:#fff}
 #vInfo{position:absolute;bottom:8px;right:10px;color:#cbd5e1;font-size:11px;background:rgba(0,0,0,.45);padding:2px 7px;border-radius:6px;display:none}
 .toolbar{margin-top:10px}
 .cwrap{position:relative;height:340px;border-radius:10px;overflow:hidden;background:var(--plotbg)}
-@media (max-width:600px){.cwrap{height:250px}}
+#serWrap{height:300px}
+@media (max-width:600px){.cwrap{height:250px}#serWrap{height:230px}}
 .cwrap canvas{width:100%;height:100%;display:block}
 .readouts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
 @media (max-width:600px){.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.ro{border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.ro{border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-width:0}
 .ro .k{font-size:11px;color:var(--muted)}
-.ro .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.ro .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro .v.err{color:var(--danger)} .ro .v.ok{color:var(--ok)}
 .meter{height:6px;border-radius:3px;background:rgba(127,127,127,.2);margin-top:4px;overflow:hidden}
-.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22c55e 0%,#22c55e 70%,#eab308 85%,#ef4444 100%);background-size:var(--mw,100%) 100%;transition:width .06s}
+.meter i{display:block;height:100%;width:0;background:#22c55e;transition:width .06s}
+.wfOnly{display:none}
+body.view-wf .wfOnly{display:flex}
 #gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .card{border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
-.card .media{background:#000;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center}
+.card .media{background:#000;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5eead4;font-size:28px;font-weight:700}
 .card .media img,.card .media video{width:100%;height:100%;object-fit:contain}
 .card .media audio{width:92%}
 .card .meta{padding:7px 10px;font-size:12px;color:var(--muted);word-break:break-all}
 .card .acts{display:flex;gap:6px;padding:0 10px 10px}
 .card .acts a,.card .acts button{flex:1;text-align:center;padding:5px 8px;font-size:12px;border-radius:7px;border:1px solid var(--line);color:var(--fg);text-decoration:none;background:var(--panel)}
-.wfOnly{display:none}
-body.view-wf .wfOnly{display:flex}
 .empty{color:var(--muted);font-size:13px}
+details{margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+details summary{cursor:pointer;font-weight:600;font-size:13px}
+pre.code,#serMon{background:var(--plotbg);color:#d6e2f0;padding:10px 12px;border-radius:8px;overflow:auto;font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,"Courier New",monospace;margin:8px 0 0}
+#serMon{height:200px;white-space:pre}
+.ex{margin-top:12px}
+.ex .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ex .hd b{font-size:13px}
+.ex .hd button{padding:3px 10px;font-size:12px}
+#inpSend{min-width:220px;flex:1}
+.sendrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;min-width:280px}
 footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);font-size:12px}
 </style>
 </head>
@@ -81,7 +94,7 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
 <div id="banner"></div>
 <header>
   <div>
-    <h1 data-i18n="title">攝影機與麥克風實驗室</h1>
+    <h1 data-i18n="title"></h1>
     <div class="sub" data-i18n="subtitle"></div>
   </div>
   <div class="spacer"></div>
@@ -111,7 +124,7 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
           <label class="chk"><input type="checkbox" id="chkAgc"><span data-i18n="agc"></span></label>
         </div>
       </div>
-      <div class="spacer" style="flex:1"></div>
+      <div class="spacer"></div>
       <button class="primary" id="btnStart" data-i18n="start"></button>
       <button id="btnStop" data-i18n="stop" disabled></button>
     </div>
@@ -130,7 +143,7 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
     </div>
     <div class="row toolbar">
       <label class="chk"><input type="checkbox" id="chkMirror" checked><span data-i18n="mirror"></span></label>
-      <div class="spacer" style="flex:1"></div>
+      <div class="spacer"></div>
       <button id="btnSnap" data-i18n="snapshot" disabled></button>
     </div>
     <div class="row toolbar">
@@ -144,10 +157,11 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
     </div>
   </section>
 
-  <!-- Audio -->
+  <!-- Analysis -->
   <section class="panel" id="pAud">
     <h2 data-i18n="audio"></h2>
     <div class="row" style="margin-bottom:10px">
+      <label class="fld"><span data-i18n="src"></span><select id="selSrc"></select></label>
       <label class="fld"><span data-i18n="view"></span>
         <select id="selView">
           <option value="spec" data-i18n="viewSpec"></option>
@@ -157,8 +171,8 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
         </select></label>
       <label class="fld"><span data-i18n="fft"></span>
         <select id="selFft">
-          <option>1024</option><option>2048</option><option selected>4096</option>
-          <option>8192</option><option>16384</option><option>32768</option>
+          <option>128</option><option>256</option><option>512</option><option>1024</option>
+          <option>2048</option><option selected>4096</option><option>8192</option><option>16384</option><option>32768</option>
         </select></label>
       <label class="fld"><span data-i18n="scale"></span>
         <select id="selScale">
@@ -168,9 +182,9 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
       <label class="fld"><span data-i18n="fmax"></span>
         <select id="selFmax">
           <option value="0" data-i18n="fmaxAuto"></option>
-          <option value="1000">1 kHz</option><option value="2000">2 kHz</option>
-          <option value="5000">5 kHz</option><option value="10000">10 kHz</option>
-          <option value="20000">20 kHz</option>
+          <option value="10">10 Hz</option><option value="50">50 Hz</option><option value="100">100 Hz</option>
+          <option value="500">500 Hz</option><option value="1000">1 kHz</option><option value="2000">2 kHz</option>
+          <option value="5000">5 kHz</option><option value="10000">10 kHz</option><option value="20000">20 kHz</option>
         </select></label>
       <label class="fld wfOnly"><span data-i18n="wfLines"></span>
         <select id="selWfLines"><option>30</option><option selected>60</option><option>100</option><option>150</option></select></label>
@@ -187,16 +201,65 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
     <div class="readouts">
       <div class="ro"><div class="k" data-i18n="peakF"></div><div class="v" id="roPeakF">—</div></div>
       <div class="ro"><div class="k" data-i18n="peakDb"></div><div class="v" id="roPeakDb">—</div></div>
-      <div class="ro"><div class="k" data-i18n="level"></div><div class="v" id="roRms">—</div><div class="meter"><i id="meter"></i></div></div>
+      <div class="ro"><div class="k" id="roRmsK" data-i18n="level"></div><div class="v" id="roRms">—</div><div class="meter"><i id="meter"></i></div></div>
       <div class="ro"><div class="k" data-i18n="sr"></div><div class="v" id="roSr">—</div></div>
     </div>
     <div class="row toolbar">
       <label class="chk"><input type="checkbox" id="chkHold"><span data-i18n="peakHold"></span></label>
       <button id="btnFreeze" disabled></button>
-      <div class="spacer" style="flex:1"></div>
+      <div class="spacer"></div>
       <button id="btnCsv" data-i18n="exportCsv" disabled></button>
       <button id="btnPng" data-i18n="exportPng"></button>
     </div>
+  </section>
+
+  <!-- Serial -->
+  <section class="panel" id="pSer">
+    <h2 data-i18n="serial"></h2>
+    <div id="serUnsup" class="hint" style="display:none;color:var(--danger);margin:0 0 8px" data-i18n="serUnsup"></div>
+    <div class="row">
+      <label class="fld"><span data-i18n="baud"></span>
+        <select id="selBaud">
+          <option>9600</option><option>19200</option><option>38400</option><option>57600</option>
+          <option selected>115200</option><option>230400</option><option>250000</option><option>460800</option>
+          <option>500000</option><option>921600</option><option>1000000</option><option>2000000</option>
+        </select></label>
+      <label class="fld"><span data-i18n="fsMode"></span>
+        <select id="selFsMode">
+          <option value="auto" data-i18n="fsAuto"></option>
+          <option value="manual" data-i18n="fsManual"></option>
+          <option value="us" data-i18n="fsTsUs"></option>
+          <option value="ms" data-i18n="fsTsMs"></option>
+        </select></label>
+      <label class="fld" id="fldFs" style="display:none"><span data-i18n="fsHz"></span><input type="number" id="inpFs" value="500" min="0.001" step="any"></label>
+      <label class="fld"><span data-i18n="window"></span>
+        <select id="selWin"><option value="2">2 s</option><option value="5" selected>5 s</option><option value="10">10 s</option><option value="30">30 s</option><option value="60">60 s</option></select></label>
+      <label class="chk" style="margin-bottom:6px"><input type="checkbox" id="chkDc" checked><span data-i18n="dcRemove"></span></label>
+      <div class="spacer"></div>
+      <button class="primary" id="btnSerConn" data-i18n="connect"></button>
+      <button id="btnSerDisc" data-i18n="disconnect" disabled></button>
+    </div>
+    <div class="hint" data-i18n="fmtHint"></div>
+    <div class="cwrap" id="serWrap" style="margin-top:10px"><canvas id="serPlot"></canvas></div>
+    <div class="readouts">
+      <div class="ro"><div class="k" data-i18n="serState"></div><div class="v" id="roSerState">—</div></div>
+      <div class="ro"><div class="k" data-i18n="serFs"></div><div class="v" id="roSerFs">—</div></div>
+      <div class="ro"><div class="k" data-i18n="serLines"></div><div class="v" id="roSerLines">0</div></div>
+      <div class="ro"><div class="k" data-i18n="serCh"></div><div class="v" id="roSerCh">0</div></div>
+    </div>
+    <div class="row toolbar" style="align-items:center">
+      <button id="btnSerRec" disabled></button>
+      <span id="serRecInfo" class="hint" style="margin:0"></span>
+      <button id="btnSerClear" data-i18n="clearData"></button>
+      <div class="sendrow">
+        <input type="text" id="inpSend" data-i18n-ph="sendPh">
+        <select id="selEol"><option value="lf">LF (\n)</option><option value="crlf">CR+LF (\r\n)</option><option value="none" data-i18n="eolNone"></option></select>
+        <button id="btnSend" data-i18n="send" disabled></button>
+      </div>
+    </div>
+    <div class="hint" data-i18n="serNote"></div>
+    <details id="detMon"><summary data-i18n="monitor"></summary><pre id="serMon"></pre></details>
+    <details><summary data-i18n="examples"></summary><div id="examples"></div></details>
   </section>
 
   <!-- Gallery -->
@@ -212,23 +275,24 @@ footer{max-width:1400px;margin:0 auto;padding:4px 20px 24px;color:var(--muted);f
 /* ================= i18n ================= */
 const I18N = {
   zh: {
-    title:'攝影機與麥克風實驗室', subtitle:'裝置選擇・拍照・錄影錄音・即時頻譜分析',
-    devices:'裝置設定', camera:'攝影機', mic:'麥克風', resolution:'解析度',
+    title:'攝影機・麥克風・序列埠實驗室', subtitle:'裝置選擇・拍照・錄影錄音・Arduino / ESP32 資料擷取・即時頻譜分析',
+    devices:'攝影機與麥克風', camera:'攝影機', mic:'麥克風', resolution:'解析度',
     auto:'預設裝置', none:'(不使用)', start:'開啟', stop:'關閉',
     processing:'瀏覽器音訊處理', echo:'回音消除', noise:'降噪', agc:'自動增益',
     procHint:'做訊號量測時建議三項全部關閉，以取得未經處理的原始訊號。更改任何設定會自動重新開啟裝置。',
     preview:'影像', mirror:'鏡像預覽 (僅影響畫面，照片與錄影不鏡像)', snapshot:'拍照', noVideo:'未開啟攝影機',
     recMode:'錄製內容', recAV:'影像＋聲音', recA:'僅聲音', recV:'僅影像',
     recStart:'● 開始錄製', recStop:'■ 停止錄製',
-    audio:'聲音分析', view:'顯示', viewSpec:'頻譜', viewSgram:'時頻圖 (2D)', viewWf:'瀑布圖 (3D)', viewWave:'波形',
+    audio:'訊號分析', src:'訊號來源', srcMic:'麥克風', srcSer:'序列埠',
+    view:'顯示', viewSpec:'頻譜', viewSgram:'時頻圖 (2D)', viewWf:'瀑布圖 (3D)', viewWave:'波形',
     wfLines:'瀑布層數', wfSpeed:'更新速度', fast:'快', medium:'中', slow:'慢', earlier:'較早 →',
     fft:'FFT 點數', scale:'頻率軸', linear:'線性', log:'對數', fmax:'最高頻率', fmaxAuto:'自動 (Nyquist)',
     smoothing:'平滑', peakHold:'峰值保持', freeze:'❚❚ 凍結', unfreeze:'▶ 繼續',
     exportCsv:'匯出頻譜 CSV', exportPng:'匯出圖片 PNG',
-    peakF:'峰值頻率', peakDb:'峰值強度', level:'RMS 音量', sr:'取樣率',
-    gallery:'擷取結果', galleryEmpty:'尚無照片或錄製檔案。', download:'下載', del:'刪除',
+    peakF:'峰值頻率', peakDb:'峰值強度', level:'RMS 音量', levelSer:'RMS 值', sr:'取樣率',
+    gallery:'擷取結果', galleryEmpty:'尚無照片、錄製檔案或資料記錄。', download:'下載', del:'刪除',
     statusIdle:'尚未開啟裝置。請選擇裝置後按「開啟」。', statusOn:'運作中',
-    insecure:'⚠ 目前不是安全環境 (https:// 或 http://localhost)，瀏覽器可能會拒絕存取攝影機與麥克風。',
+    insecure:'⚠ 目前不是安全環境 (https:// 或 http://localhost)，瀏覽器可能會拒絕存取攝影機、麥克風與序列埠。',
     unsupported:'此瀏覽器不支援 getUserMedia，請改用新版 Chrome、Edge、Firefox 或 Safari。',
     errNotAllowed:'權限被拒絕。請點網址列左側的鎖頭圖示，允許攝影機與麥克風後再按「開啟」。若網頁嵌在 iframe (例如 Google Sites) 內，請改在新分頁開啟。',
     errNotFound:'找不到指定的裝置，請確認裝置已連接。', errNotReadable:'裝置無法讀取，可能正被其他程式 (例如視訊會議軟體) 使用中。',
@@ -236,28 +300,50 @@ const I18N = {
     errNone:'請至少選擇攝影機或麥克風其中一項。', errNoTrack:'目前沒有可錄製的影像或聲音軌道。',
     errNoCam:'請先開啟攝影機。', errNoRec:'此瀏覽器不支援 MediaRecorder 錄製。',
     savedSnap:'已拍照。', savedRec:'錄製完成：', recording:'錄製中…',
-    freqAxis:'頻率 (Hz)', timeAxis:'時間 (s)', timeMs:'時間 (ms)', amp:'振幅', startHint:'按「開啟」開始',
-    footer:'頻譜由 Web Audio AnalyserNode 計算 (Blackman 窗)，數值為相對滿刻度的 dB (dBFS)，未經麥克風頻率響應校正。所有資料只在本機瀏覽器處理，不會上傳。',
+    freqAxis:'頻率 (Hz)', timeAxis:'時間 (s)', timeMs:'時間 (ms)', amp:'振幅', value:'數值', samples:'樣本',
+    startHint:'按「開啟」開始',
+    serial:'序列埠 (Arduino / ESP32)', baud:'鮑率 (baud)', fsMode:'取樣率來源',
+    fsAuto:'自動估計 (依資料到達速率)', fsManual:'手動指定', fsTsUs:'第一欄為時間戳 (µs)', fsTsMs:'第一欄為時間戳 (ms)',
+    fsHz:'取樣率 (Hz)', window:'顯示時間長度', dcRemove:'分析時去除直流成分',
+    connect:'連接裝置', disconnect:'中斷連接',
+    serState:'連線狀態', serFs:'取樣率', serLines:'已接收資料', serCh:'通道數',
+    serIdle:'未連線', serOn:'已連線', serLost:'裝置已中斷連線', serErrOpen:'無法開啟',
+    serRecStart:'● 開始記錄 CSV', serRecStop:'■ 停止記錄', serRecInfo:'已記錄 {n} 筆',
+    clearData:'清除資料', send:'傳送', sendPh:'輸入要傳給裝置的指令，例如 LED ON', eolNone:'不加結尾',
+    monitor:'原始資料監看 (最近 200 行)', examples:'Arduino / ESP32 範例程式', copy:'複製', copied:'已複製 ✓',
+    serUnsup:'此瀏覽器不支援 Web Serial。請使用桌機版 Chrome 或 Edge，並以 https 或 localhost 開啟本頁 (不可嵌在 Google Sites 的 iframe 中)。',
+    serHint:'按「連接裝置」並選擇 Arduino / ESP32 的序列埠', serWaiting:'已連線，等待數值資料…',
+    fmtHint:'資料格式：每行一筆，數值以逗號、空白或 Tab 分隔，最多 8 個通道；也支援 Arduino 序列埠繪圖家的「名稱:數值」格式。非數值的行 (例如開機訊息) 只會出現在原始資料監看。',
+    serNote:'序列埠同一時間只能被一個程式使用，請先關閉 Arduino IDE 的序列埠監控視窗。部分開發板在連線時會自動重新開機。',
+    exT1:'範例 1：Arduino Uno / Nano — A0 類比輸入，固定 500 Hz 取樣，可接收 LED 指令',
+    exH1:'網頁設定：鮑率 115200，取樣率來源選「第一欄為時間戳 (µs)」。在下方傳送 LED ON / LED OFF 可控制板上 LED。',
+    exT2:'範例 2：ESP32 — 兩通道 ADC，固定 1 kHz 取樣',
+    exH2:'網頁設定：鮑率 921600，取樣率來源選「第一欄為時間戳 (µs)」。GPIO34/35 為 ADC1 腳位 (輸入電壓 0–3.3 V)。ESP32-S3/C3 若使用原生 USB，鮑率設定不影響速度。',
+    exT3:'範例 3：序列埠繪圖家格式 (名稱:數值)',
+    exH3:'網頁設定：鮑率 115200，取樣率來源選「自動估計」或「手動指定 100 Hz」。通道名稱 (sine、light) 會自動帶入。',
+    csvFile:'序列埠資料',
+    footer:'聲音頻譜由 Web Audio AnalyserNode 計算，單位 dBFS；序列埠頻譜以 Blackman 窗 FFT 計算，單位為 dB (相對 1 個原始單位的振幅)。兩者皆未經感測器頻率響應校正。所有資料只在本機瀏覽器處理，不會上傳。',
     langBtn:'English'
   },
   en: {
-    title:'Webcam & Microphone Lab', subtitle:'Device selection · Snapshot · Recording · Real-time spectrum',
-    devices:'Devices', camera:'Camera', mic:'Microphone', resolution:'Resolution',
+    title:'Webcam · Mic · Serial Lab', subtitle:'Device selection · Snapshot · Recording · Arduino / ESP32 data acquisition · Real-time spectrum',
+    devices:'Camera & microphone', camera:'Camera', mic:'Microphone', resolution:'Resolution',
     auto:'Default device', none:'(None)', start:'Start', stop:'Stop',
     processing:'Browser audio processing', echo:'Echo cancellation', noise:'Noise suppression', agc:'Auto gain',
     procHint:'For measurements, turn all three off to get the raw, unprocessed signal. Changing any setting restarts the devices automatically.',
     preview:'Video', mirror:'Mirror preview (display only; snapshots and recordings are not mirrored)', snapshot:'Snapshot', noVideo:'Camera off',
     recMode:'Record', recAV:'Video + audio', recA:'Audio only', recV:'Video only',
     recStart:'● Start recording', recStop:'■ Stop recording',
-    audio:'Audio analysis', view:'View', viewSpec:'Spectrum', viewSgram:'Spectrogram (2D)', viewWf:'Waterfall (3D)', viewWave:'Waveform',
+    audio:'Signal analysis', src:'Signal source', srcMic:'Microphone', srcSer:'Serial',
+    view:'View', viewSpec:'Spectrum', viewSgram:'Spectrogram (2D)', viewWf:'Waterfall (3D)', viewWave:'Waveform',
     wfLines:'Waterfall lines', wfSpeed:'Update speed', fast:'Fast', medium:'Medium', slow:'Slow', earlier:'earlier →',
     fft:'FFT size', scale:'Freq. axis', linear:'Linear', log:'Log', fmax:'Max freq.', fmaxAuto:'Auto (Nyquist)',
     smoothing:'Smoothing', peakHold:'Peak hold', freeze:'❚❚ Freeze', unfreeze:'▶ Resume',
     exportCsv:'Export spectrum CSV', exportPng:'Export plot PNG',
-    peakF:'Peak frequency', peakDb:'Peak level', level:'RMS level', sr:'Sample rate',
-    gallery:'Captures', galleryEmpty:'No snapshots or recordings yet.', download:'Download', del:'Delete',
+    peakF:'Peak frequency', peakDb:'Peak level', level:'RMS level', levelSer:'RMS value', sr:'Sample rate',
+    gallery:'Captures', galleryEmpty:'No snapshots, recordings or data logs yet.', download:'Download', del:'Delete',
     statusIdle:'Devices are off. Choose devices and press Start.', statusOn:'Running',
-    insecure:'⚠ Not a secure context (https:// or http://localhost). The browser may block camera and microphone access.',
+    insecure:'⚠ Not a secure context (https:// or http://localhost). The browser may block camera, microphone and serial access.',
     unsupported:'getUserMedia is not supported. Please use a recent Chrome, Edge, Firefox or Safari.',
     errNotAllowed:'Permission denied. Click the lock icon in the address bar, allow camera and microphone, then press Start. If this page is embedded in an iframe (e.g. Google Sites), open it in a new tab.',
     errNotFound:'The selected device was not found. Check that it is connected.', errNotReadable:'Device cannot be read; it may be in use by another app (e.g. video conferencing).',
@@ -265,8 +351,29 @@ const I18N = {
     errNone:'Select at least a camera or a microphone.', errNoTrack:'No video or audio track available to record.',
     errNoCam:'Start the camera first.', errNoRec:'MediaRecorder is not supported in this browser.',
     savedSnap:'Snapshot taken.', savedRec:'Recording saved: ', recording:'Recording…',
-    freqAxis:'Frequency (Hz)', timeAxis:'Time (s)', timeMs:'Time (ms)', amp:'Amplitude', startHint:'Press Start',
-    footer:'Spectrum computed by the Web Audio AnalyserNode (Blackman window). Values are dB relative to full scale (dBFS), not corrected for microphone frequency response. All data stays in your browser; nothing is uploaded.',
+    freqAxis:'Frequency (Hz)', timeAxis:'Time (s)', timeMs:'Time (ms)', amp:'Amplitude', value:'Value', samples:'Samples',
+    startHint:'Press Start',
+    serial:'Serial port (Arduino / ESP32)', baud:'Baud rate', fsMode:'Sample-rate source',
+    fsAuto:'Auto estimate (arrival rate)', fsManual:'Manual', fsTsUs:'1st column = timestamp (µs)', fsTsMs:'1st column = timestamp (ms)',
+    fsHz:'Sample rate (Hz)', window:'Display window', dcRemove:'Remove DC for analysis',
+    connect:'Connect device', disconnect:'Disconnect',
+    serState:'Connection', serFs:'Sample rate', serLines:'Samples received', serCh:'Channels',
+    serIdle:'Not connected', serOn:'Connected', serLost:'Device disconnected', serErrOpen:'Cannot open',
+    serRecStart:'● Start CSV log', serRecStop:'■ Stop log', serRecInfo:'{n} rows logged',
+    clearData:'Clear data', send:'Send', sendPh:'Command to send to the device, e.g. LED ON', eolNone:'No line ending',
+    monitor:'Raw data monitor (last 200 lines)', examples:'Arduino / ESP32 example sketches', copy:'Copy', copied:'Copied ✓',
+    serUnsup:'Web Serial is not supported. Use desktop Chrome or Edge and open this page over https or localhost (not inside a Google Sites iframe).',
+    serHint:'Press "Connect device" and choose the Arduino / ESP32 port', serWaiting:'Connected, waiting for numeric data…',
+    fmtHint:'Data format: one sample per line, values separated by commas, spaces or tabs, up to 8 channels. The Arduino Serial Plotter "name:value" format is also supported. Non-numeric lines (e.g. boot messages) appear only in the raw monitor.',
+    serNote:'A serial port can be used by only one program at a time; close the Arduino IDE Serial Monitor first. Some boards reset when the port is opened.',
+    exT1:'Example 1: Arduino Uno / Nano — A0 analog input at a fixed 500 Hz, accepts LED commands',
+    exH1:'Page settings: baud 115200, sample-rate source "1st column = timestamp (µs)". Send LED ON / LED OFF below to control the on-board LED.',
+    exT2:'Example 2: ESP32 — two ADC channels at a fixed 1 kHz',
+    exH2:'Page settings: baud 921600, sample-rate source "1st column = timestamp (µs)". GPIO34/35 are ADC1 pins (0–3.3 V). On ESP32-S3/C3 native USB the baud setting does not limit speed.',
+    exT3:'Example 3: Serial Plotter format (name:value)',
+    exH3:'Page settings: baud 115200, sample-rate source "Auto estimate" or "Manual 100 Hz". Channel names (sine, light) are picked up automatically.',
+    csvFile:'Serial data',
+    footer:'Audio spectrum computed by the Web Audio AnalyserNode (dBFS). Serial spectrum computed by a Blackman-windowed FFT, in dB re 1 raw unit of amplitude. Neither is corrected for sensor frequency response. All data stays in your browser; nothing is uploaded.',
     langBtn:'中文'
   }
 };
@@ -278,10 +385,10 @@ const t = k => (I18N[LANG][k] ?? k);
 /* ================= State ================= */
 const S = {
   stream:null, ctx:null, analyser:null, source:null,
-  freq:null, time:null, hold:null, frozen:false,
+  A:null, freq:null, time:null, hold:null, frozen:false, peak:null, hadA:null,
   rec:null, recChunks:[], recT0:0, recTimer:null,
   status:{key:'statusIdle', type:'', extra:''},
-  gallery:[], sg:null, sgCtx:null, sgDt:1/60, lastT:0
+  gallery:[], sg:null, sgCtx:null, sgDt:1/60, sgLast:0, wf:[], wfCount:0
 };
 
 /* ================= Helpers ================= */
@@ -289,10 +396,11 @@ function stamp(){
   const d=new Date(), p=n=>String(n).padStart(2,'0');
   return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
-function fmtHz(f){ if(!isFinite(f)) return '—'; return f>=1000 ? (f/1000).toFixed(f>=10000?2:3)+' kHz' : f.toFixed(1)+' Hz'; }
-function fmtTick(f){ return f>=1000 ? (+(f/1000).toFixed(2))+'k' : String(+f.toFixed(1)); }
+function fmtHz(f){ if(!isFinite(f)) return '—'; return f>=1000 ? (f/1000).toFixed(f>=10000?2:3)+' kHz' : f>=10 ? f.toFixed(1)+' Hz' : f.toFixed(3)+' Hz'; }
+function fmtTick(f){ return f>=1000 ? (+(f/1000).toFixed(2))+'k' : String(+f.toFixed(3)); }
+function fmtNum(v){ if(!isFinite(v)) return '—'; const a=Math.abs(v); return (a!==0 && (a<1e-3||a>=1e6)) ? v.toExponential(3) : String(+v.toPrecision(5)); }
 function fmtSize(b){ return b>1048576 ? (b/1048576).toFixed(2)+' MB' : (b/1024).toFixed(1)+' kB'; }
-function niceStep(range,n){ const raw=range/n, p=Math.pow(10,Math.floor(Math.log10(raw))), m=raw/p; return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p; }
+function niceStep(range,n){ if(!(range>0)) return 1; const raw=range/n, p=Math.pow(10,Math.floor(Math.log10(raw))), m=raw/p; return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p; }
 function downloadBlob(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); }
 function setStatus(key,type='',extra=''){ S.status={key,type,extra}; renderStatus(); }
 function renderStatus(){ const el=$('status'); el.className=S.status.type; el.textContent=t(S.status.key)+(S.status.extra||''); }
@@ -301,24 +409,23 @@ function renderStatus(){ const el=$('status'); el.className=S.status.type; el.te
 function applyLang(){
   document.documentElement.lang = LANG==='zh' ? 'zh-Hant' : 'en';
   document.querySelectorAll('[data-i18n]').forEach(el=>{ el.textContent=t(el.dataset.i18n); });
-  document.title = t('title') + ' | ' + (LANG==='zh'?'Webcam & Mic Lab':'攝影機與麥克風實驗室');
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder=t(el.dataset.i18nPh); });
+  document.title = t('title');
   $('btnLang').textContent = t('langBtn');
-  updateRecBtn(); updateFreezeBtn(); renderStatus(); renderGallery(); fillDevices();
+  updateRecBtn(); updateFreezeBtn(); renderStatus(); renderGallery(); fillDevices(); fillSrc(); renderExamples(); serRenderState(); serUpdateRecBtn();
+  $('roRmsK').textContent = t(S.A?.ser ? 'levelSer' : 'level');
   if(!window.isSecureContext){ $('banner').style.display='block'; $('banner').textContent=t('insecure'); }
 }
 $('btnLang').onclick = ()=>{ LANG = LANG==='zh'?'en':'zh'; try{localStorage.setItem('wml_lang',LANG);}catch(e){} applyLang(); };
 
-/* ================= Devices ================= */
+/* ================= Camera / mic devices ================= */
 let DEVICES = [];
 async function refreshDevices(){
   if(!navigator.mediaDevices?.enumerateDevices) return;
   try { DEVICES = await navigator.mediaDevices.enumerateDevices(); } catch(e){ DEVICES=[]; }
   fillDevices();
 }
-function fillDevices(){
-  fillSel($('selCam'),'videoinput',t('camera'));
-  fillSel($('selMic'),'audioinput',t('mic'));
-}
+function fillDevices(){ fillSel($('selCam'),'videoinput',t('camera')); fillSel($('selMic'),'audioinput',t('mic')); }
 function fillSel(sel,kind,prefix){
   const prev = sel.value;
   sel.innerHTML='';
@@ -333,7 +440,7 @@ function fillSel(sel,kind,prefix){
 }
 navigator.mediaDevices?.addEventListener?.('devicechange', refreshDevices);
 
-/* ================= Start / Stop ================= */
+/* ================= Start / Stop camera & mic ================= */
 async function start(){
   if(!navigator.mediaDevices?.getUserMedia){ setStatus('unsupported','err'); return; }
   const camId=$('selCam').value, micId=$('selMic').value;
@@ -370,9 +477,10 @@ async function start(){
       S.source = S.ctx.createMediaStreamSource(stream);
       S.analyser = S.ctx.createAnalyser();
       S.analyser.smoothingTimeConstant = +$('rngSmooth').value;
+      S.analyser.minDecibels=-140; S.analyser.maxDecibels=0;
+      S.analyser.fftSize = +$('selFft').value;
       S.source.connect(S.analyser);
-      setFft();
-      $('roSr').textContent = (S.ctx.sampleRate/1000)+' kHz';
+      resetAnalysis();
     }catch(e){ console.error(e); }
   }
   await refreshDevices();
@@ -390,10 +498,9 @@ function stop(silent){
   S.stream=null;
   try{ S.source?.disconnect(); }catch(e){}
   if(S.ctx){ S.ctx.close().catch(()=>{}); }
-  S.ctx=S.analyser=S.source=null; S.freq=S.time=S.hold=null; S.frozen=false;
+  S.ctx=S.analyser=S.source=null;
+  if($('selSrc').value==='mic') resetAnalysis();
   $('video').srcObject=null; $('vPh').style.display=''; $('vInfo').style.display='none';
-  ['roPeakF','roPeakDb','roRms','roSr'].forEach(id=>$(id).textContent='—'); $('meter').style.width='0';
-  resetSg();
   if(!silent) setStatus('statusIdle');
   updateUI();
 }
@@ -402,13 +509,10 @@ $('btnStop').onclick = ()=>stop(false);
 ['selCam','selMic','selRes','chkEcho','chkNoise','chkAgc'].forEach(id=>$(id).addEventListener('change',()=>{ if(S.stream) start(); }));
 
 function updateUI(){
-  const on=!!S.stream, hasV=on&&S.stream.getVideoTracks().length>0, hasA=!!S.analyser;
+  const on=!!S.stream, hasV=on&&S.stream.getVideoTracks().length>0;
   $('btnStop').disabled=!on;
-  $('btnStart').textContent = t(on?'start':'start');
   $('btnSnap').disabled=!hasV;
   $('btnRec').disabled=!on;
-  $('btnFreeze').disabled=!hasA;
-  $('btnCsv').disabled=!hasA;
   updateRecBtn(); updateFreezeBtn();
 }
 
@@ -472,8 +576,8 @@ function updateRecBtn(){
 }
 
 /* ================= Gallery ================= */
-function addGallery(blob,name,kind){
-  S.gallery.unshift({blob,name,kind,url:URL.createObjectURL(blob)});
+function addGallery(blob,name,kind,extra){
+  S.gallery.unshift({blob,name,kind,extra,url:URL.createObjectURL(blob)});
   renderGallery();
 }
 function renderGallery(){
@@ -482,12 +586,12 @@ function renderGallery(){
   S.gallery.forEach((it,idx)=>{
     const card=document.createElement('div'); card.className='card';
     const media=document.createElement('div'); media.className='media';
-    let el;
-    if(it.kind==='img'){ el=document.createElement('img'); el.src=it.url; el.alt=it.name; }
-    else if(it.kind==='video'){ el=document.createElement('video'); el.src=it.url; el.controls=true; el.playsInline=true; }
-    else { el=document.createElement('audio'); el.src=it.url; el.controls=true; }
-    media.appendChild(el);
-    const meta=document.createElement('div'); meta.className='meta'; meta.textContent=`${it.name} · ${fmtSize(it.blob.size)}`;
+    if(it.kind==='img'){ const el=document.createElement('img'); el.src=it.url; el.alt=it.name; media.appendChild(el); }
+    else if(it.kind==='video'){ const el=document.createElement('video'); el.src=it.url; el.controls=true; el.playsInline=true; media.appendChild(el); }
+    else if(it.kind==='audio'){ const el=document.createElement('audio'); el.src=it.url; el.controls=true; media.appendChild(el); }
+    else { media.textContent='CSV'; }
+    const meta=document.createElement('div'); meta.className='meta';
+    meta.textContent=`${it.name} · ${fmtSize(it.blob.size)}${it.extra?' · '+it.extra:''}`;
     const acts=document.createElement('div'); acts.className='acts';
     const a=document.createElement('a'); a.href=it.url; a.download=it.name; a.textContent=t('download');
     const del=document.createElement('button'); del.textContent=t('del');
@@ -496,36 +600,54 @@ function renderGallery(){
   });
 }
 
-/* ================= Audio analysis controls ================= */
-function setFft(){
-  if(!S.analyser) return;
-  S.analyser.fftSize = +$('selFft').value;
-  S.analyser.minDecibels=-140; S.analyser.maxDecibels=0;
-  S.freq = new Float32Array(S.analyser.frequencyBinCount);
-  S.time = new Float32Array(S.analyser.fftSize);
-  S.hold = $('chkHold').checked ? new Float32Array(S.analyser.frequencyBinCount).fill(-Infinity) : null;
-  resetSg();
+/* ================= Analysis source ================= */
+function fillSrc(){
+  const sel=$('selSrc'), prev=sel.value||'mic';
+  sel.innerHTML='';
+  sel.add(new Option(t('srcMic'),'mic'));
+  const n=Math.max(1,SER.nch);
+  for(let c=0;c<n;c++) sel.add(new Option(`${t('srcSer')} — ${SER.names[c]||'CH'+(c+1)}`,'ser'+c));
+  sel.value = [...sel.options].some(o=>o.value===prev) ? prev : 'mic';
 }
-$('selFft').onchange = setFft;
+function getSrc(){
+  const v=$('selSrc').value;
+  if(v==='mic') return S.analyser ? {sr:S.ctx.sampleRate, n:S.analyser.fftSize, ser:false} : null;
+  const c=+v.slice(3);
+  return (SER.n>1 && c<SER.nch && SER.fs>0) ? {sr:SER.fs, n:+$('selFft').value, ser:true, c} : null;
+}
+function resetAnalysis(){ S.freq=S.time=S.hold=null; S.peak=null; SER.mag=null; SER.top=null; SER.lastAn=-1; resetSg(); }
+function dbUnit(){ return S.A?.ser ? 'dB' : 'dBFS'; }
+function dbR(map){
+  if(!S.A?.ser) return map ? {min:-130,max:-20} : {min:-140,max:0};
+  const top=Math.ceil(((SER.top??0)+6)/10)*10;
+  return map ? {min:top-90,max:top-5} : {min:top-120,max:top};
+}
+$('selSrc').addEventListener('change',()=>{ resetAnalysis(); $('roRmsK').textContent=t($('selSrc').value==='mic'?'level':'levelSer'); });
+
+/* ================= Analysis controls ================= */
+$('selFft').onchange = ()=>{ if(S.analyser) S.analyser.fftSize=+$('selFft').value; resetAnalysis(); };
 $('rngSmooth').oninput = e=>{ $('smVal').textContent=(+e.target.value).toFixed(2); if(S.analyser) S.analyser.smoothingTimeConstant=+e.target.value; };
-$('chkHold').onchange = e=>{ S.hold = (e.target.checked && S.analyser) ? new Float32Array(S.analyser.frequencyBinCount).fill(-Infinity) : null; };
+$('chkHold').onchange = e=>{ S.hold = (e.target.checked && S.freq) ? new Float32Array(S.freq.length).fill(-Infinity) : null; };
 ['selScale','selFmax','selView','selWfLines'].forEach(id=>$(id).addEventListener('change',resetSg));
 $('selView').addEventListener('change',()=>{ document.body.classList.toggle('view-wf',$('selView').value==='wf'); });
 $('btnFreeze').onclick = ()=>{ S.frozen=!S.frozen; updateFreezeBtn(); };
 function updateFreezeBtn(){ $('btnFreeze').textContent=t(S.frozen?'unfreeze':'freeze'); }
 
 $('btnCsv').onclick = ()=>{
-  if(!S.freq) return;
-  const sr=S.ctx.sampleRate, N=S.freq.length, df=sr/S.analyser.fftSize;
-  const lines=['# Webcam & Mic Lab spectrum export',`# sample_rate_Hz=${sr}`,`# fft_size=${S.analyser.fftSize}`,
-    `# smoothing=${S.analyser.smoothingTimeConstant}`,`# window=Blackman (AnalyserNode)`,
-    `# echoCancellation=${$('chkEcho').checked},noiseSuppression=${$('chkNoise').checked},autoGainControl=${$('chkAgc').checked}`,
-    S.hold ? 'frequency_Hz,magnitude_dBFS,peak_hold_dBFS' : 'frequency_Hz,magnitude_dBFS'];
+  if(!S.freq || !S.A) return;
+  const sr=S.A.sr, n=S.A.n, N=S.freq.length, df=sr/n, ser=S.A.ser;
+  const lines=['# Webcam · Mic · Serial Lab spectrum export',
+    `# source=${ser ? 'serial '+(SER.names[S.A.c]||'CH'+(S.A.c+1)) : 'microphone'}`,
+    `# sample_rate_Hz=${sr}`,`# fft_size=${n}`,`# smoothing=${$('rngSmooth').value}`,`# window=Blackman`];
+  if(ser) lines.push(`# dc_removed=${$('chkDc').checked}`,'# unit=dB re 1 raw unit (amplitude spectrum)');
+  else lines.push(`# echoCancellation=${$('chkEcho').checked},noiseSuppression=${$('chkNoise').checked},autoGainControl=${$('chkAgc').checked}`,'# unit=dBFS');
+  const col = ser ? 'magnitude_dB' : 'magnitude_dBFS';
+  lines.push(S.hold ? `frequency_Hz,${col},peak_hold_${ser?'dB':'dBFS'}` : `frequency_Hz,${col}`);
   for(let i=0;i<N;i++){
     const v=isFinite(S.freq[i])?S.freq[i].toFixed(3):'-inf';
-    lines.push(S.hold ? `${(i*df).toFixed(4)},${v},${isFinite(S.hold[i])?S.hold[i].toFixed(3):'-inf'}` : `${(i*df).toFixed(4)},${v}`);
+    lines.push(S.hold ? `${(i*df).toPrecision(8)},${v},${isFinite(S.hold[i])?S.hold[i].toFixed(3):'-inf'}` : `${(i*df).toPrecision(8)},${v}`);
   }
-  downloadBlob(new Blob([lines.join('\n')],{type:'text/csv'}),`spectrum_${stamp()}.csv`);
+  downloadBlob(new Blob([lines.join('\n')],{type:'text/csv'}),`spectrum_${ser?'serial':'mic'}_${stamp()}.csv`);
 };
 $('btnPng').onclick = ()=>{ $('plot').toBlob(b=>downloadBlob(b,`${$('selView').value}_${stamp()}.png`),'image/png'); };
 
@@ -542,19 +664,23 @@ new ResizeObserver(resizeCanvas).observe(cv);
 
 function box(){ const d=DPR, m={l:58*d,r:14*d,t:12*d,b:36*d}; return {x0:m.l,y0:m.t,w:cv.width-m.l-m.r,h:cv.height-m.t-m.b}; }
 function fRange(){
-  const nyq = S.ctx ? S.ctx.sampleRate/2 : 24000;
+  const nyq = S.A ? S.A.sr/2 : 24000;
   const fm = +$('selFmax').value; const fmax = fm ? Math.min(fm,nyq) : nyq;
   const log = $('selScale').value==='log';
-  return {fmin: log?20:0, fmax, log};
+  let fmin = 0;
+  if(log) fmin = S.A?.ser ? S.A.sr/S.A.n : 20;
+  if(log && fmin >= fmax) fmin = fmax/100;
+  return {fmin, fmax, log};
 }
 function f2u(f,R){ return R.log ? Math.log(Math.max(f,R.fmin)/R.fmin)/Math.log(R.fmax/R.fmin) : (f-R.fmin)/(R.fmax-R.fmin); }
 function u2f(u,R){ return R.log ? R.fmin*Math.pow(R.fmax/R.fmin,u) : R.fmin+u*(R.fmax-R.fmin); }
 function freqTicks(R){
-  if(R.log){ const out=[]; for(let p=1;p<6;p++) for(const m of [1,2,5]){ const f=m*Math.pow(10,p); if(f>=R.fmin&&f<=R.fmax) out.push(f);} return out; }
+  if(R.log){ const out=[]; for(let p=-3;p<6;p++) for(const m of [1,2,5]){ const f=m*Math.pow(10,p); if(f>=R.fmin*0.999&&f<=R.fmax*1.001) out.push(f);} return out; }
   const st=niceStep(R.fmax-R.fmin,8), out=[]; for(let f=0;f<=R.fmax+1e-9;f+=st) out.push(f); return out;
 }
-function axisStyle(){ g.font=`${11*DPR}px system-ui,sans-serif`; g.fillStyle=getCss('--axis'); g.strokeStyle=getCss('--grid'); g.lineWidth=1; }
 const cssCache={}; function getCss(n){ return cssCache[n] ??= getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function axisStyle(ctx=g){ ctx.font=`${11*DPR}px system-ui,sans-serif`; ctx.fillStyle=getCss('--axis'); ctx.strokeStyle=getCss('--grid'); ctx.lineWidth=1; }
+function yLabel(ctx,B,txt){ ctx.save(); ctx.translate(12*DPR,B.y0+B.h/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt,0,0); ctx.restore(); }
 
 function drawFreqAxisX(B,R){
   axisStyle(); g.textAlign='center'; g.textBaseline='top';
@@ -564,33 +690,35 @@ function drawFreqAxisX(B,R){
 function drawFreqAxisY(B,R){
   axisStyle(); g.textAlign='right'; g.textBaseline='middle';
   for(const f of freqTicks(R)){ const y=B.y0+B.h-f2u(f,R)*B.h; g.beginPath(); g.moveTo(B.x0,y); g.lineTo(B.x0+B.w,y); g.stroke(); g.fillText(fmtTick(f),B.x0-6*DPR,y); }
-  g.save(); g.translate(12*DPR,B.y0+B.h/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.fillText(t('freqAxis'),0,0); g.restore();
+  yLabel(g,B,t('freqAxis'));
 }
-function drawDbAxisY(B,dbMin,dbMax){
+function drawDbAxisY(B,D){
   axisStyle(); g.textAlign='right'; g.textBaseline='middle';
-  for(let db=dbMax;db>=dbMin;db-=20){ const y=B.y0+(dbMax-db)/(dbMax-dbMin)*B.h; g.beginPath(); g.moveTo(B.x0,y); g.lineTo(B.x0+B.w,y); g.stroke(); g.fillText(db,B.x0-6*DPR,y); }
-  g.save(); g.translate(12*DPR,B.y0+B.h/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.fillText('dBFS',0,0); g.restore();
+  for(let db=Math.floor(D.max/20)*20;db>=D.min;db-=20){ const y=B.y0+(D.max-db)/(D.max-D.min)*B.h; g.beginPath(); g.moveTo(B.x0,y); g.lineTo(B.x0+B.w,y); g.stroke(); g.fillText(db,B.x0-6*DPR,y); }
+  yLabel(g,B,dbUnit());
 }
-function hint(B){ g.fillStyle='rgba(200,210,225,.55)'; g.font=`${14*DPR}px system-ui,sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(t('startHint'),B.x0+B.w/2,B.y0+B.h/2); }
+function hintText(){ return $('selSrc').value==='mic' ? t('startHint') : (SER.port ? t('serWaiting') : t('serHint')); }
+function hint(B,ctx=g,txt=hintText()){ ctx.fillStyle='rgba(200,210,225,.6)'; let fsz=14*DPR; ctx.font=`${fsz}px system-ui,sans-serif`;
+  const tw=ctx.measureText(txt).width; if(tw>B.w*0.95){ fsz=Math.max(9*DPR,fsz*B.w*0.95/tw); ctx.font=`${fsz}px system-ui,sans-serif`; } ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt,B.x0+B.w/2,B.y0+B.h/2); }
 
+/* --- Spectrum --- */
 function drawSpectrum(){
-  const B=box(), R=fRange(), dbMin=-140, dbMax=0;
-  drawFreqAxisX(B,R); drawDbAxisY(B,dbMin,dbMax);
+  const B=box(), R=fRange(), D=dbR(false);
+  drawFreqAxisX(B,R); drawDbAxisY(B,D);
   if(!S.freq){ hint(B); return; }
-  const df=S.ctx.sampleRate/S.analyser.fftSize;
-  const iy = v => B.y0 + Math.min(1,Math.max(0,(dbMax-(isFinite(v)?v:dbMin))/(dbMax-dbMin)))*B.h;
+  const df=S.A.sr/S.A.n;
+  const iy = v => B.y0 + Math.min(1,Math.max(0,(D.max-(isFinite(v)?v:D.min))/(D.max-D.min)))*B.h;
   const trace=(arr)=>{
-    g.beginPath(); let first=true, lastX=null, lastY=null;
+    g.beginPath(); let first=true, lastX=null;
     const i0=Math.max(1,Math.ceil(R.fmin/df)), i1=Math.min(arr.length-1,Math.floor(R.fmax/df));
     for(let i=i0;i<=i1;i++){
       const x=B.x0+f2u(i*df,R)*B.w, y=iy(arr[i]);
       if(first){ g.moveTo(x,y); first=false; } else g.lineTo(x,y);
-      lastX=x; lastY=y;
+      lastX=x;
     }
-    return {i0,i1,lastX};
+    return {i0,lastX};
   };
   g.save(); g.beginPath(); g.rect(B.x0,B.y0,B.w,B.h); g.clip();
-  // fill
   const r=trace(S.freq);
   if(r.lastX!==null){
     g.lineTo(r.lastX,B.y0+B.h); g.lineTo(B.x0+f2u(r.i0*df,R)*B.w,B.y0+B.h); g.closePath();
@@ -599,7 +727,6 @@ function drawSpectrum(){
   }
   trace(S.freq); g.strokeStyle=getCss('--curve'); g.lineWidth=1.3*DPR; g.stroke();
   if(S.hold){ trace(S.hold); g.strokeStyle=getCss('--hold'); g.lineWidth=1*DPR; g.stroke(); }
-  // peak marker
   if(S.peak && isFinite(S.peak.f) && S.peak.f>=R.fmin && S.peak.f<=R.fmax){
     const x=B.x0+f2u(S.peak.f,R)*B.w, y=iy(S.peak.db);
     g.fillStyle='#fde047'; g.beginPath(); g.arc(x,y,3.5*DPR,0,7); g.fill();
@@ -609,13 +736,13 @@ function drawSpectrum(){
   g.restore();
 }
 
-/* --- Spectrogram --- */
+/* --- Spectrogram (2D) --- */
 const LUT=(()=>{ const st=[[0,0,4],[40,11,84],[101,21,110],[159,42,99],[212,72,66],[245,125,21],[250,193,39],[252,255,164]];
   const out=new Uint8ClampedArray(256*3);
   for(let i=0;i<256;i++){ const u=i/255*(st.length-1), k=Math.min(st.length-2,Math.floor(u)), f=u-k;
     for(let c=0;c<3;c++) out[i*3+c]=st[k][c]+(st[k+1][c]-st[k][c])*f; }
   return out; })();
-function resetSg(){ S.sg=null; S.sgCtx=null; S.wf=[]; S.wfCount=0; }
+function resetSg(){ S.sg=null; S.sgCtx=null; S.wf=[]; S.wfCount=0; S.sgLast=0; }
 function ensureSg(B){
   const w=Math.max(1,Math.floor(B.w)), h=Math.max(1,Math.floor(B.h));
   if(!S.sg || S.sg.width!==w || S.sg.height!==h){
@@ -625,17 +752,21 @@ function ensureSg(B){
   }
 }
 function pushSgColumn(){
+  const now=performance.now();
+  if(S.sgLast){ const d=(now-S.sgLast)/1000; if(d>0 && d<2) S.sgDt=S.sgDt*0.9+d*0.1; }
+  S.sgLast=now;
   const B=box(); ensureSg(B);
-  const R=fRange(), h=S.sg.height, w=S.sg.width, df=S.ctx.sampleRate/S.analyser.fftSize;
-  const dbMin=-130, dbMax=-20, d=S.sgCol.data, N=S.freq.length;
+  const R=fRange(), D=dbR(true), h=S.sg.height, w=S.sg.width, df=S.A.sr/S.A.n;
+  const d=S.sgCol.data, N=S.freq.length;
   S.sgCtx.drawImage(S.sg,-1,0);
   for(let r=0;r<h;r++){
     const u=1-(r+0.5)/h, f=u2f(u,R);
     const fu=u2f(Math.min(1,u+0.5/h),R), fl=u2f(Math.max(0,u-0.5/h),R);
-    let i0=Math.max(0,Math.floor(fl/df)), i1=Math.min(N-1,Math.ceil(fu/df)), v=-Infinity;
+    const i0=Math.max(0,Math.floor(fl/df)), i1=Math.min(N-1,Math.ceil(fu/df));
+    let v=-Infinity;
     if(i1<=i0){ v=S.freq[Math.min(N-1,Math.round(f/df))]; }
     else for(let i=i0;i<=i1;i++) if(S.freq[i]>v) v=S.freq[i];
-    const n=Math.max(0,Math.min(255,Math.round(((isFinite(v)?v:dbMin)-dbMin)/(dbMax-dbMin)*255)));
+    const n=Math.max(0,Math.min(255,Math.round(((isFinite(v)?v:D.min)-D.min)/(D.max-D.min)*255)));
     d[r*4]=LUT[n*3]; d[r*4+1]=LUT[n*3+1]; d[r*4+2]=LUT[n*3+2]; d[r*4+3]=255;
   }
   S.sgCtx.putImageData(S.sgCol,w-1,0);
@@ -644,7 +775,6 @@ function drawSpectrogram(){
   const B=box(), R=fRange();
   if(S.sg) g.drawImage(S.sg,B.x0,B.y0,Math.floor(B.w),Math.floor(B.h));
   drawFreqAxisY(B,R);
-  // time axis
   axisStyle(); g.textAlign='center'; g.textBaseline='top';
   const span=B.w*S.sgDt, st=niceStep(span,6);
   for(let s=0;s<=span;s+=st){ const x=B.x0+B.w-s/S.sgDt; g.fillText(s===0?'0':'-'+(+s.toFixed(2)),x,B.y0+B.h+4*DPR); }
@@ -653,41 +783,36 @@ function drawSpectrogram(){
 }
 
 /* --- Waterfall (3D) --- */
-const WF_DB_MIN=-130, WF_DB_MAX=-20, WF_PTS=400;
-function wfGeom(){
-  const B=box(), dx=B.w*0.22, dy=B.h*0.42;
-  return {B, dx, dy, fw:B.w-dx, A:B.h-dy, x0:B.x0, base:B.y0+B.h};
-}
+const WF_PTS=400;
+function wfGeom(){ const B=box(), dx=B.w*0.22, dy=B.h*0.42; return {B, dx, dy, fw:B.w-dx, A:B.h-dy, x0:B.x0, base:B.y0+B.h}; }
 function pushWfLine(){
-  const R=fRange(), df=S.ctx.sampleRate/S.analyser.fftSize, N=S.freq.length;
+  const R=fRange(), D=dbR(true), df=S.A.sr/S.A.n, N=S.freq.length;
   const line=new Float32Array(WF_PTS);
   for(let j=0;j<WF_PTS;j++){
     const fl=u2f(j/WF_PTS,R), fu=u2f((j+1)/WF_PTS,R);
-    let i0=Math.max(1,Math.floor(fl/df)), i1=Math.min(N-1,Math.ceil(fu/df)), v=-Infinity;
+    const i0=Math.max(1,Math.floor(fl/df)), i1=Math.min(N-1,Math.max(i0,Math.ceil(fu/df)));
+    let v=-Infinity;
     for(let i=i0;i<=i1;i++) if(S.freq[i]>v) v=S.freq[i];
-    line[j]=Math.max(0,Math.min(1,((isFinite(v)?v:WF_DB_MIN)-WF_DB_MIN)/(WF_DB_MAX-WF_DB_MIN)));
+    line[j]=Math.max(0,Math.min(1,((isFinite(v)?v:D.min)-D.min)/(D.max-D.min)));
   }
   S.wf.unshift(line);
   const L=+$('selWfLines').value; if(S.wf.length>L) S.wf.length=L;
 }
 function drawWaterfall(){
-  const G=wfGeom(), B=G.B, R=fRange(), L=+$('selWfLines').value;
+  const G=wfGeom(), B=G.B, R=fRange(), L=+$('selWfLines').value, D=dbR(true);
   const depth=k=>k/Math.max(1,L-1);
-  // floor & frame
   axisStyle();
   g.beginPath();
   g.moveTo(G.x0,G.base); g.lineTo(G.x0+G.dx,G.base-G.dy);
   g.lineTo(G.x0+G.dx+G.fw,G.base-G.dy); g.lineTo(G.x0+G.fw,G.base); g.closePath(); g.stroke();
-  // back wall dB grid
   g.textAlign='right'; g.textBaseline='middle';
-  for(let db=WF_DB_MAX;db>=WF_DB_MIN;db-=20){
-    const n=(db-WF_DB_MIN)/(WF_DB_MAX-WF_DB_MIN), y=G.base-n*G.A;
+  for(let db=Math.floor(D.max/20)*20;db>=D.min;db-=20){
+    const n=(db-D.min)/(D.max-D.min), y=G.base-n*G.A;
     g.beginPath(); g.moveTo(G.x0,y); g.lineTo(G.x0+G.dx,y-G.dy); g.stroke();
     g.fillText(db,G.x0-6*DPR,y);
   }
   g.beginPath(); g.moveTo(G.x0,G.base); g.lineTo(G.x0,G.base-G.A); g.stroke();
-  g.save(); g.translate(12*DPR,G.base-G.A/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.fillText('dBFS',0,0); g.restore();
-  // freq ticks along front baseline
+  g.save(); g.translate(12*DPR,G.base-G.A/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.fillText(dbUnit(),0,0); g.restore();
   g.textAlign='center'; g.textBaseline='top';
   for(const f of freqTicks(R)){
     const x=G.x0+f2u(f,R)*G.fw;
@@ -695,11 +820,9 @@ function drawWaterfall(){
     g.fillText(fmtTick(f),x,G.base+4*DPR);
   }
   g.fillText(t('freqAxis'),G.x0+G.fw/2,G.base+18*DPR);
-  // depth label
   g.save(); g.translate(G.x0+G.fw+G.dx*0.5+4*DPR,G.base-G.dy*0.5+4*DPR); g.rotate(-Math.atan2(G.dy,G.dx));
   g.textAlign='center'; g.textBaseline='top'; g.fillText(t('earlier'),0,0); g.restore();
-  if(!S.wf || !S.wf.length){ if(!S.freq) hint(B); return; }
-  // lines: back to front (painter's algorithm)
+  if(!S.wf.length){ if(!S.freq) hint(B); return; }
   const bg=getCss('--plotbg');
   for(let k=S.wf.length-1;k>=0;k--){
     const line=S.wf[k], d=depth(k), ox=G.x0+d*G.dx, by=G.base-d*G.dy;
@@ -717,65 +840,513 @@ function drawWaterfall(){
 }
 
 /* --- Waveform --- */
+function drawYTicks(ctx,B,ymin,ymax,label){
+  axisStyle(ctx); ctx.textAlign='right'; ctx.textBaseline='middle';
+  const st=niceStep(ymax-ymin,5);
+  for(let v=Math.ceil(ymin/st)*st; v<=ymax+st*1e-6; v+=st){
+    const y=B.y0+(ymax-v)/(ymax-ymin)*B.h;
+    ctx.beginPath(); ctx.moveTo(B.x0,y); ctx.lineTo(B.x0+B.w,y); ctx.stroke();
+    ctx.fillText(fmtTick0(v,st),B.x0-6*DPR,y);
+  }
+  yLabel(ctx,B,label);
+}
+function fmtTick0(v,st){ const dp=Math.max(0,-Math.floor(Math.log10(st))+ (st/Math.pow(10,Math.floor(Math.log10(st)))===1?0:0)); const a=Math.abs(v); if(a>=1e5||(a>0&&a<1e-3)) return v.toExponential(1); return Math.abs(v)<st*1e-6?'0':v.toFixed(Math.min(6,dp)); }
+function niceRange(mn,mx){ if(!isFinite(mn)||!isFinite(mx)) return [-1,1]; if(mx-mn<1e-12){ const p=Math.abs(mx)*0.1||1; return [mn-p,mx+p]; } const pad=(mx-mn)*0.08; return [mn-pad,mx+pad]; }
 function drawWave(){
   const B=box();
-  axisStyle(); g.textAlign='right'; g.textBaseline='middle';
-  for(const a of [1,0.5,0,-0.5,-1]){ const y=B.y0+(1-a)/2*B.h; g.beginPath(); g.moveTo(B.x0,y); g.lineTo(B.x0+B.w,y); g.stroke(); g.fillText(a,B.x0-6*DPR,y); }
-  g.save(); g.translate(12*DPR,B.y0+B.h/2); g.rotate(-Math.PI/2); g.textAlign='center'; g.fillText(t('amp'),0,0); g.restore();
-  if(!S.time){ hint(B); return; }
-  const sr=S.ctx.sampleRate, N=S.time.length, M=Math.floor(N/2);
-  let start=0; for(let i=1;i<N-M;i++){ if(S.time[i-1]<0 && S.time[i]>=0){ start=i; break; } }
-  const ms=M/sr*1000, st=niceStep(ms,8);
-  g.textAlign='center'; g.textBaseline='top';
-  for(let x=0;x<=ms+1e-9;x+=st){ const px=B.x0+x/ms*B.w; g.beginPath(); g.moveTo(px,B.y0); g.lineTo(px,B.y0+B.h); g.stroke(); g.fillText(+x.toFixed(2),px,B.y0+B.h+4*DPR); }
-  g.fillText(t('timeMs'),B.x0+B.w/2,B.y0+B.h+18*DPR);
+  if(!S.time){
+    drawYTicks(g,B,-1,1,t('amp')); hint(B); return;
+  }
+  if(!S.A.ser){
+    drawYTicks(g,B,-1,1,t('amp'));
+    const sr=S.A.sr, N=S.time.length, M=Math.floor(N/2);
+    let start=0; for(let i=1;i<N-M;i++){ if(S.time[i-1]<0 && S.time[i]>=0){ start=i; break; } }
+    const ms=M/sr*1000, st=niceStep(ms,8);
+    axisStyle(); g.textAlign='center'; g.textBaseline='top';
+    for(let x=0;x<=ms+1e-9;x+=st){ const px=B.x0+x/ms*B.w; g.beginPath(); g.moveTo(px,B.y0); g.lineTo(px,B.y0+B.h); g.stroke(); g.fillText(+x.toFixed(3),px,B.y0+B.h+4*DPR); }
+    g.fillText(t('timeMs'),B.x0+B.w/2,B.y0+B.h+18*DPR);
+    g.save(); g.beginPath(); g.rect(B.x0,B.y0,B.w,B.h); g.clip();
+    g.beginPath();
+    for(let i=0;i<M;i++){ const x=B.x0+i/(M-1)*B.w, y=B.y0+(1-S.time[start+i])/2*B.h; i?g.lineTo(x,y):g.moveTo(x,y); }
+    g.strokeStyle=getCss('--curve'); g.lineWidth=1.3*DPR; g.stroke(); g.restore();
+    return;
+  }
+  // serial: last k samples of the analysis buffer (after optional DC removal)
+  const N=S.time.length, k=Math.max(2,Math.min(N,SER.lastK||0)), off=N-k;
+  let mn=Infinity,mx=-Infinity; for(let i=off;i<N;i++){ const v=S.time[i]; if(v<mn)mn=v; if(v>mx)mx=v; }
+  const [ymin,ymax]=niceRange(mn,mx);
+  drawYTicks(g,B,ymin,ymax,t('value'));
+  const dur=k/S.A.sr, st=niceStep(dur,8);
+  axisStyle(); g.textAlign='center'; g.textBaseline='top';
+  for(let s=0;s<=dur+1e-9;s+=st){ const px=B.x0+B.w-s/dur*B.w; g.beginPath(); g.moveTo(px,B.y0); g.lineTo(px,B.y0+B.h); g.stroke(); g.fillText(s===0?'0':'-'+(+s.toFixed(4)),px,B.y0+B.h+4*DPR); }
+  g.fillText(t('timeAxis'),B.x0+B.w/2,B.y0+B.h+18*DPR);
   g.save(); g.beginPath(); g.rect(B.x0,B.y0,B.w,B.h); g.clip();
   g.beginPath();
-  for(let i=0;i<M;i++){ const x=B.x0+i/(M-1)*B.w, y=B.y0+(1-S.time[start+i])/2*B.h; i?g.lineTo(x,y):g.moveTo(x,y); }
+  const Y=v=>B.y0+(ymax-v)/(ymax-ymin)*B.h;
+  if(k<=B.w*2){ for(let i=0;i<k;i++){ const x=B.x0+i/(k-1)*B.w, y=Y(S.time[off+i]); i?g.lineTo(x,y):g.moveTo(x,y); } }
+  else { const cols=Math.floor(B.w); for(let p=0;p<cols;p++){ const a=off+Math.floor(p*k/cols), e=off+Math.floor((p+1)*k/cols); let lo=Infinity,hi=-Infinity; for(let i=a;i<e;i++){ const v=S.time[i]; if(v<lo)lo=v; if(v>hi)hi=v; } const x=B.x0+p+0.5; if(!p) g.moveTo(x,Y(hi)); g.lineTo(x,Y(hi)); g.lineTo(x,Y(lo)); } }
   g.strokeStyle=getCss('--curve'); g.lineWidth=1.3*DPR; g.stroke(); g.restore();
 }
 
 /* --- Readouts --- */
+function clearReadouts(){
+  ['roPeakF','roPeakDb','roRms','roSr'].forEach(id=>$(id).textContent='—'); $('meter').style.width='0';
+}
 function updateReadouts(){
-  const sr=S.ctx.sampleRate, df=sr/S.analyser.fftSize, N=S.freq.length, R=fRange();
-  const i0=Math.max(1,Math.ceil(Math.max(20,R.fmin)/df)), i1=Math.min(N-2,Math.floor(R.fmax/df));
+  const sr=S.A.sr, df=sr/S.A.n, N=S.freq.length, R=fRange();
+  const fLow = S.A.ser ? Math.max(df,R.fmin) : Math.max(20,R.fmin);
+  const i0=Math.max(1,Math.ceil(fLow/df)), i1=Math.min(N-2,Math.floor(R.fmax/df));
   let bi=-1, bv=-Infinity;
   for(let i=i0;i<=i1;i++) if(S.freq[i]>bv){ bv=S.freq[i]; bi=i; }
   if(bi>0 && isFinite(bv)){
     const a=S.freq[bi-1], b=bv, c=S.freq[bi+1];
-    let p=0; const den=a-2*b+c; if(bi>i0&&bi<i1&&isFinite(a)&&isFinite(c)&&den<0) p=Math.max(-0.5,Math.min(0.5,0.5*(a-c)/den));
+    let p=0; const den=a-2*b+c;
+    if(bi>i0&&bi<i1&&isFinite(a)&&isFinite(c)&&den<0) p=Math.max(-0.5,Math.min(0.5,0.5*(a-c)/den));
     S.peak={f:(bi+p)*df, db:b-0.25*(a-c)*p};
-    $('roPeakF').textContent=fmtHz(S.peak.f); $('roPeakDb').textContent=S.peak.db.toFixed(1)+' dBFS';
+    $('roPeakF').textContent=fmtHz(S.peak.f); $('roPeakDb').textContent=S.peak.db.toFixed(1)+' '+dbUnit();
   } else { S.peak=null; $('roPeakF').textContent='—'; $('roPeakDb').textContent='—'; }
-  let ss=0; for(let i=0;i<S.time.length;i++) ss+=S.time[i]*S.time[i];
-  const rms=Math.sqrt(ss/S.time.length), db=rms>0?20*Math.log10(rms):-Infinity;
-  $('roRms').textContent = isFinite(db)? db.toFixed(1)+' dBFS' : '−∞';
-  const pct=Math.max(0,Math.min(100,(db+60)/60*100));
-  const m=$('meter'); m.style.width=(isFinite(pct)?pct:0)+'%'; m.style.setProperty('--mw', (pct>0?100/pct*100:100)+'%');
+  if(!S.A.ser){
+    let ss=0; for(let i=0;i<S.time.length;i++) ss+=S.time[i]*S.time[i];
+    const rms=Math.sqrt(ss/S.time.length), db=rms>0?20*Math.log10(rms):-Infinity;
+    $('roRms').textContent = isFinite(db)? db.toFixed(1)+' dBFS' : '−∞';
+    const pct=Math.max(0,Math.min(100,(db+60)/60*100));
+    const m=$('meter'); m.style.width=(isFinite(pct)?pct:0)+'%'; m.style.background = pct>92?'#ef4444':pct>80?'#eab308':'#22c55e';
+    $('roSr').textContent=(sr/1000)+' kHz';
+  } else {
+    const N2=S.time.length, k=Math.max(1,Math.min(N2,SER.lastK||0));
+    let ss=0; for(let i=N2-k;i<N2;i++) ss+=S.time[i]*S.time[i];
+    $('roRms').textContent=fmtNum(Math.sqrt(ss/k)); $('meter').style.width='0';
+    $('roSr').textContent=fmtHz(sr);
+  }
 }
 
-/* --- Main loop --- */
-function loop(now){
-  const dt=(now-(S.lastT||now))/1000; S.lastT=now;
-  if(dt>0 && dt<0.5) S.sgDt = S.sgDt*0.95 + dt*0.05;
+/* ================= Serial (Web Serial API) ================= */
+const SER_MAXCH=8, SER_CAP=1<<17;
+const SER_COLORS=['#5eead4','#fb923c','#a78bfa','#f472b6','#facc15','#60a5fa','#4ade80','#f87171'];
+const SER = {port:null, reader:null, keep:false, loopP:null, buf:'', fs:0, nch:0, names:[], bufs:[], n:0,
+  text:0, tsPrev:null, dts:[], rateHist:[], rec:null, mon:[], monDirty:false, sig:'', state:{key:'serIdle',type:'',extra:''},
+  mag:null, top:null, lastAn:-1, lastK:0, last:[]};
+
+function serSupported(){ return 'serial' in navigator; }
+function serSetState(key,type='',extra=''){ SER.state={key,type,extra}; serRenderState(); }
+function serRenderState(){ const el=$('roSerState'); el.textContent=t(SER.state.key)+(SER.state.extra?': '+SER.state.extra:''); el.className='v '+SER.state.type; el.title=el.textContent; }
+function serLog(s){ SER.mon.push(s); if(SER.mon.length>200) SER.mon.splice(0,SER.mon.length-200); SER.monDirty=true; }
+
+function serReset(){
+  SER.buf=''; SER.nch=0; SER.names=[]; SER.bufs=[]; SER.n=0; SER.text=0; SER.last=[];
+  SER.tsPrev=null; SER.dts=[]; SER.rateHist=[]; SER.fs=($('selFsMode').value==='manual') ? (+$('inpFs').value||0) : 0;
+  if($('selSrc').value!=='mic') resetAnalysis();
+  fillSrc(); SER.sig='';
+}
+async function serConnect(){
+  if(!serSupported()) return;
+  let port;
+  try{ port = await navigator.serial.requestPort(); }catch(e){ return; }   // user cancelled the chooser
+  try{ await port.open({baudRate:+$('selBaud').value, bufferSize:1<<16}); }
+  catch(e){ serSetState('serErrOpen','err',e.message); return; }
+  SER.port=port; SER.keep=true;
+  serReset(); SER.mon=[]; SER.monDirty=true;
+  const info=port.getInfo?.()||{};
+  serSetState('serOn','ok', info.usbVendorId ? `USB ${info.usbVendorId.toString(16).padStart(4,'0')}:${(info.usbProductId||0).toString(16).padStart(4,'0')}` : '');
+  serUpdateUI();
+  SER.loopP = serReadLoop();
+}
+async function serReadLoop(){
+  const dec=new TextDecoder();
+  while(SER.port && SER.port.readable && SER.keep){
+    SER.reader=SER.port.readable.getReader();
+    try{
+      for(;;){ const {value,done}=await SER.reader.read(); if(done) break; if(value) serHandle(dec.decode(value,{stream:true})); }
+    }catch(e){ serLog('⚠ '+e.name+': '+e.message); }
+    finally{ try{ SER.reader.releaseLock(); }catch(e){} SER.reader=null; }
+  }
+  if(SER.keep){ SER.keep=false; await serClose(); serSetState('serLost','err'); }
+}
+async function serDisconnect(){
+  SER.keep=false;
+  try{ await SER.reader?.cancel(); }catch(e){}
+  try{ await SER.loopP; }catch(e){}
+  await serClose(); serSetState('serIdle');
+}
+async function serClose(){
+  if(SER.rec) serStopRec();
+  const p=SER.port; SER.port=null;
+  try{ await p?.close(); }catch(e){}
+  serUpdateUI();
+}
+function serUpdateUI(){
+  const on=!!SER.port;
+  $('btnSerConn').disabled = on || !serSupported();
+  $('btnSerDisc').disabled = !on;
+  $('btnSend').disabled = !on;
+  $('btnSerRec').disabled = !on && !SER.rec;
+  $('selBaud').disabled = on;
+  serUpdateRecBtn();
+}
+function serHandle(text){
+  SER.buf+=text;
+  const parts=SER.buf.split(/\r?\n|\r/);
+  SER.buf=parts.pop();
+  if(SER.buf.length>4096) SER.buf='';
+  for(const ln of parts) serParse(ln);
+}
+function serParse(line){
+  const s=line.trim(); if(!s) return;
+  serLog(s);
+  const toks=s.replace(/:\s+/g,':').split(/[\s,;]+/).filter(Boolean);
+  const vals=[], names=[];
+  for(const tk of toks){
+    const k=tk.lastIndexOf(':'), nm=k>0?tk.slice(0,k):null, vs=k>0?tk.slice(k+1):tk, x=Number(vs);
+    if(vs===''||!isFinite(x)){ SER.text++; return; }
+    vals.push(x); names.push(nm);
+  }
+  const mode=$('selFsMode').value;
+  let ts=null;
+  if(mode==='us'||mode==='ms'){ if(vals.length<2){ SER.text++; return; } ts=vals.shift(); names.shift(); }
+  serPush(vals,names,ts);
+}
+function serPush(vals,names,ts){
+  const want=Math.min(SER_MAXCH,vals.length);
+  while(SER.nch<want){
+    const b=new Float32Array(SER_CAP);
+    if(SER.n>0) b.fill(vals[SER.nch]);           // back-fill a new channel with its first value
+    SER.bufs.push(b); SER.nch++;
+  }
+  const w=SER.n % SER_CAP;
+  for(let c=0;c<SER.nch;c++){
+    const b=SER.bufs[c];
+    b[w] = c<vals.length ? vals[c] : b[(w-1+SER_CAP)%SER_CAP];
+    if(names[c]) SER.names[c]=names[c];
+    SER.last[c]=b[w];
+  }
+  SER.n++;
+  if(ts!==null){
+    if(SER.tsPrev!==null){ const d=ts-SER.tsPrev; if(d>0){ SER.dts.push(d); if(SER.dts.length>256) SER.dts.shift(); } }
+    SER.tsPrev=ts;
+  }
+  if(SER.rec){
+    const R=SER.rec;
+    if(R.rows.length>=R.max){ serStopRec(); return; }
+    const row=[((performance.now()-R.t0)/1000).toFixed(4)];
+    if(R.ts){ if(R.ts0===null) R.ts0=ts; row.push(ts===null?'':((ts-R.ts0)*R.tsScale).toPrecision(10)); }
+    for(let c=0;c<vals.length && c<SER_MAXCH;c++) row.push(vals[c]);
+    R.rows.push(row.join(','));
+  }
+}
+function serUpdateFs(){
+  const mode=$('selFsMode').value, now=performance.now();
+  if(mode==='manual'){ SER.fs=+$('inpFs').value||0; return; }
+  if(mode==='us'||mode==='ms'){
+    if(SER.dts.length>=4){ const a=[...SER.dts].sort((x,y)=>x-y); SER.fs=(mode==='us'?1e6:1e3)/a[a.length>>1]; }
+    return;
+  }
+  SER.rateHist.push([now,SER.n]);
+  while(SER.rateHist.length>2 && now-SER.rateHist[0][0]>3000) SER.rateHist.shift();
+  const [t0,n0]=SER.rateHist[0];
+  if(now-t0>400 && SER.n>n0){ const est=(SER.n-n0)/((now-t0)/1000); SER.fs = SER.fs ? SER.fs*0.7+est*0.3 : est; }
+}
+function serGet(c,n,dst){
+  const k=Math.min(n,SER.n,SER_CAP), off=n-k, b=SER.bufs[c];
+  for(let i=0;i<off;i++) dst[i]=0;
+  let r=(SER.n-k)%SER_CAP;
+  for(let i=0;i<k;i++){ dst[off+i]=b[r]; if(++r===SER_CAP) r=0; }
+  return k;
+}
+
+/* --- FFT for serial data --- */
+const FFTC={};
+function fftPlan(n){
+  if(FFTC[n]) return FFTC[n];
+  const bits=Math.log2(n), rev=new Uint32Array(n), cos=new Float64Array(n/2), sin=new Float64Array(n/2), win=new Float64Array(n);
+  for(let i=0;i<n;i++){ let r=0,x=i; for(let b=0;b<bits;b++){ r=(r<<1)|(x&1); x>>=1; } rev[i]=r; }
+  for(let k=0;k<n/2;k++){ cos[k]=Math.cos(2*Math.PI*k/n); sin[k]=-Math.sin(2*Math.PI*k/n); }
+  let sw=0; for(let i=0;i<n;i++){ win[i]=0.42-0.5*Math.cos(2*Math.PI*i/n)+0.08*Math.cos(4*Math.PI*i/n); sw+=win[i]; }
+  return FFTC[n]={n,rev,cos,sin,win,sw,re:new Float64Array(n),im:new Float64Array(n)};
+}
+function fft(x){
+  const P=fftPlan(x.length), n=P.n, re=P.re, im=P.im;
+  for(let i=0;i<n;i++){ re[P.rev[i]]=x[i]*P.win[i]; im[P.rev[i]]=0; }
+  for(let size=2; size<=n; size<<=1){
+    const half=size>>1, step=n/size;
+    for(let i=0;i<n;i+=size){
+      for(let j=0,k=0;j<half;j++,k+=step){
+        const a=i+j, b=a+half;
+        const tr=re[b]*P.cos[k]-im[b]*P.sin[k], ti=re[b]*P.sin[k]+im[b]*P.cos[k];
+        re[b]=re[a]-tr; im[b]=im[a]-ti; re[a]+=tr; im[a]+=ti;
+      }
+    }
+  }
+  return P;
+}
+function serAnalyze(){
+  if(SER.n===SER.lastAn) return false;
+  SER.lastAn=SER.n;
+  const n=S.A.n, k=serGet(S.A.c,n,S.time); SER.lastK=k;
+  if($('chkDc').checked && k>0){ let m=0; for(let i=n-k;i<n;i++) m+=S.time[i]; m/=k; for(let i=n-k;i<n;i++) S.time[i]-=m; }
+  const P=fft(S.time), tau=+$('rngSmooth').value, half=n/2;
+  if(!SER.mag || SER.mag.length!==half) SER.mag=new Float64Array(half);
+  let mx=-Infinity;
+  for(let i=0;i<half;i++){
+    const m=Math.hypot(P.re[i],P.im[i])*2/P.sw;
+    SER.mag[i]=tau*SER.mag[i]+(1-tau)*m;
+    const db = SER.mag[i]>0 ? 20*Math.log10(SER.mag[i]) : -Infinity;
+    S.freq[i]=db; if(i>0 && db>mx) mx=db;
+  }
+  if(isFinite(mx)) SER.top = (SER.top==null || mx>SER.top) ? mx : SER.top+(mx-SER.top)*0.01;
+  return true;
+}
+
+/* --- Serial strip chart --- */
+const scv=$('serPlot'), sx=scv.getContext('2d');
+function resizeSer(){ const r=scv.getBoundingClientRect(); scv.width=Math.max(1,Math.round(r.width*DPR)); scv.height=Math.max(1,Math.round(r.height*DPR)); }
+new ResizeObserver(resizeSer).observe(scv);
+function drawSerPlot(){
+  sx.fillStyle=getCss('--plotbg'); sx.fillRect(0,0,scv.width,scv.height);
+  const d=DPR, B={x0:64*d,y0:12*d,w:scv.width-78*d,h:scv.height-48*d};
+  if(!SER.nch || SER.n<2){
+    drawYTicks(sx,B,-1,1,t('value'));
+    hint(B,sx, !serSupported() ? 'Web Serial ✕' : SER.port ? t('serWaiting') : t('serHint'));
+    return;
+  }
+  const fs=SER.fs, win=+$('selWin').value;
+  let M = fs>0 ? Math.round(win*fs) : 500;
+  M=Math.max(2,Math.min(M,SER.n,SER_CAP));
+  const start=SER.n-M;
+  let mn=Infinity,mx=-Infinity;
+  for(let c=0;c<SER.nch;c++){ const b=SER.bufs[c]; for(let i=0;i<M;i++){ const v=b[(start+i)%SER_CAP]; if(v<mn)mn=v; if(v>mx)mx=v; } }
+  const [ymin,ymax]=niceRange(mn,mx);
+  drawYTicks(sx,B,ymin,ymax,t('value'));
+  // x axis
+  axisStyle(sx); sx.textAlign='center'; sx.textBaseline='top';
+  if(fs>0){
+    const dur=M/fs, st=niceStep(dur,8);
+    for(let s=0;s<=dur+1e-9;s+=st){ const x=B.x0+B.w-s/dur*B.w; sx.beginPath(); sx.moveTo(x,B.y0); sx.lineTo(x,B.y0+B.h); sx.stroke(); sx.fillText(s===0?'0':'-'+(+s.toFixed(4)),x,B.y0+B.h+4*d); }
+    sx.fillText(t('timeAxis'),B.x0+B.w/2,B.y0+B.h+18*d);
+  } else {
+    const st=niceStep(M,8);
+    for(let s=0;s<=M;s+=st){ const x=B.x0+B.w-s/M*B.w; sx.beginPath(); sx.moveTo(x,B.y0); sx.lineTo(x,B.y0+B.h); sx.stroke(); sx.fillText(s===0?'0':'-'+s,x,B.y0+B.h+4*d); }
+    sx.fillText(t('samples'),B.x0+B.w/2,B.y0+B.h+18*d);
+  }
+  const Y=v=>B.y0+(ymax-v)/(ymax-ymin)*B.h;
+  sx.save(); sx.beginPath(); sx.rect(B.x0,B.y0,B.w,B.h); sx.clip();
+  for(let c=0;c<SER.nch;c++){
+    const b=SER.bufs[c];
+    sx.beginPath();
+    if(M<=B.w*2){
+      for(let i=0;i<M;i++){ const x=B.x0+i/(M-1)*B.w, y=Y(b[(start+i)%SER_CAP]); i?sx.lineTo(x,y):sx.moveTo(x,y); }
+    } else {
+      const cols=Math.floor(B.w);
+      for(let p=0;p<cols;p++){
+        const a=Math.floor(p*M/cols), e=Math.floor((p+1)*M/cols); let lo=Infinity,hi=-Infinity;
+        for(let i=a;i<e;i++){ const v=b[(start+i)%SER_CAP]; if(v<lo)lo=v; if(v>hi)hi=v; }
+        const x=B.x0+p+0.5; if(!p) sx.moveTo(x,Y(hi)); sx.lineTo(x,Y(hi)); sx.lineTo(x,Y(lo));
+      }
+    }
+    sx.strokeStyle=SER_COLORS[c]; sx.lineWidth=1.3*d; sx.stroke();
+  }
+  sx.restore();
+  // legend
+  sx.font=`${12*d}px system-ui,sans-serif`; sx.textAlign='left'; sx.textBaseline='middle';
+  let lx=B.x0+8*d, ly=B.y0+12*d;
+  for(let c=0;c<SER.nch;c++){
+    const txt=`${SER.names[c]||'CH'+(c+1)}: ${fmtNum(SER.last[c])}`, w=sx.measureText(txt).width+26*d;
+    if(lx+w>B.x0+B.w){ lx=B.x0+8*d; ly+=18*d; }
+    sx.fillStyle='rgba(14,19,29,.75)'; sx.fillRect(lx-4*d,ly-8*d,w,16*d);
+    sx.fillStyle=SER_COLORS[c]; sx.fillRect(lx,ly-2*d,12*d,4*d);
+    sx.fillStyle='#e2e8f0'; sx.fillText(txt,lx+16*d,ly);
+    lx+=w+6*d;
+  }
+}
+
+/* --- Serial record to CSV --- */
+function serStartRec(){
+  const mode=$('selFsMode').value, ts=(mode==='us'||mode==='ms');
+  SER.rec={rows:[], t0:performance.now(), ts, ts0:null, tsScale: mode==='us'?1e-6:1e-3, max:3000000};
+  serUpdateRecBtn();
+}
+function serStopRec(){
+  const R=SER.rec; if(!R) return; SER.rec=null;
+  const names=[]; for(let c=0;c<SER.nch;c++) names.push(SER.names[c]||'CH'+(c+1));
+  const head=['# Webcam · Mic · Serial Lab serial log',`# baud=${$('selBaud').value}`,`# sample_rate_source=${$('selFsMode').value}`,`# estimated_sample_rate_Hz=${SER.fs?SER.fs.toPrecision(8):''}`,
+    ['pc_time_s', ...(R.ts?['device_time_s']:[]), ...names].join(',')];
+  const blob=new Blob([head.join('\n')+'\n'+R.rows.join('\n')+'\n'],{type:'text/csv'});
+  if(R.rows.length) addGallery(blob,`serial_${stamp()}.csv`,'csv',R.rows.length+(LANG==='zh'?' 筆':' rows'));
+  serUpdateRecBtn(); serUpdateUI();
+}
+function serUpdateRecBtn(){
+  const b=$('btnSerRec'); b.textContent=t(SER.rec?'serRecStop':'serRecStart'); b.className=SER.rec?'danger':'';
+  $('serRecInfo').textContent = SER.rec ? t('serRecInfo').replace('{n}',SER.rec.rows.length.toLocaleString()) : '';
+}
+$('btnSerRec').onclick=()=>{ SER.rec ? serStopRec() : serStartRec(); };
+
+/* --- Serial send --- */
+async function serSend(){
+  if(!SER.port?.writable) return;
+  const txt=$('inpSend').value, eol={lf:'\n',crlf:'\r\n',none:''}[$('selEol').value];
+  const w=SER.port.writable.getWriter();
+  try{ await w.write(new TextEncoder().encode(txt+eol)); serLog('→ '+txt); }
+  catch(e){ serLog('⚠ '+e.message); }
+  finally{ w.releaseLock(); }
+}
+$('btnSend').onclick=serSend;
+$('inpSend').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); serSend(); } });
+
+/* --- Serial controls --- */
+$('btnSerConn').onclick=serConnect;
+$('btnSerDisc').onclick=serDisconnect;
+$('btnSerClear').onclick=()=>{ const keepNames=SER.names.slice(); serReset(); SER.names=keepNames; SER.mon=[]; SER.monDirty=true; };
+$('selFsMode').onchange=()=>{
+  $('fldFs').style.display = $('selFsMode').value==='manual' ? '' : 'none';
+  serReset();
+};
+$('inpFs').oninput=()=>{ if($('selFsMode').value==='manual') SER.fs=+$('inpFs').value||0; };
+$('chkDc').onchange=()=>{ SER.lastAn=-1; SER.mag=null; };
+navigator.serial?.addEventListener?.('disconnect', e=>{ if(e.target===SER.port && SER.keep){ serLog('⚠ disconnected'); } });
+
+/* --- Serial periodic UI (4×/s) --- */
+setInterval(()=>{
+  serUpdateFs();
+  $('roSerFs').textContent = SER.fs>0 ? fmtHz(SER.fs) : '—';
+  $('roSerLines').textContent = SER.n.toLocaleString() + (SER.text ? ` (+${SER.text})` : '');
+  $('roSerCh').textContent = SER.nch;
+  const sig=SER.nch+'|'+SER.names.join(',');
+  if(sig!==SER.sig){ SER.sig=sig; fillSrc(); }
+  if(SER.rec) serUpdateRecBtn();
+  if(SER.monDirty && $('detMon').open){ const m=$('serMon'); m.textContent=SER.mon.join('\n'); m.scrollTop=m.scrollHeight; SER.monDirty=false; }
+},250);
+$('detMon').addEventListener('toggle',()=>{ SER.monDirty=true; });
+
+/* --- Example sketches --- */
+const EXAMPLES=[
+{t:'exT1',h:'exH1',code:
+`// Arduino Uno / Nano: A0 → 500 Hz, output "micros,value"
+const unsigned long PERIOD_US = 2000;   // 2000 µs = 500 Hz
+unsigned long nextT;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.setTimeout(5);
+  pinMode(LED_BUILTIN, OUTPUT);
+  nextT = micros();
+}
+
+void loop() {
+  // fixed-rate sampling 固定週期取樣
+  if ((long)(micros() - nextT) >= 0) {
+    nextT += PERIOD_US;
+    unsigned long t = micros();
+    int v = analogRead(A0);
+    Serial.print(t);
+    Serial.print(',');
+    Serial.println(v);
+  }
+  // commands from the web page 接收網頁指令
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\\n');
+    cmd.trim();
+    if (cmd == "LED ON")  digitalWrite(LED_BUILTIN, HIGH);
+    if (cmd == "LED OFF") digitalWrite(LED_BUILTIN, LOW);
+  }
+}`},
+{t:'exT2',h:'exH2',code:
+`// ESP32: GPIO34 + GPIO35 → 1 kHz, output "micros,a,b"
+const int PIN_A = 34, PIN_B = 35, LED = 2;
+const uint32_t PERIOD_US = 1000;        // 1000 µs = 1 kHz
+uint32_t nextT;
+
+void setup() {
+  Serial.begin(921600);
+  Serial.setTimeout(5);
+  analogReadResolution(12);              // 0–4095
+  pinMode(LED, OUTPUT);
+  nextT = micros();
+}
+
+void loop() {
+  if ((int32_t)(micros() - nextT) >= 0) {
+    nextT += PERIOD_US;
+    uint32_t t = micros();
+    int a = analogRead(PIN_A);
+    int b = analogRead(PIN_B);
+    Serial.printf("%lu,%d,%d\\n", (unsigned long)t, a, b);
+  }
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\\n');
+    cmd.trim();
+    if (cmd == "LED ON")  digitalWrite(LED, HIGH);
+    if (cmd == "LED OFF") digitalWrite(LED, LOW);
+  }
+}`},
+{t:'exT3',h:'exH3',code:
+`// Serial Plotter format "name:value,name:value"
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  float t = millis() / 1000.0;
+  Serial.print("sine:");
+  Serial.print(100 * sin(2 * PI * 2.0 * t));   // 2 Hz test signal 測試訊號
+  Serial.print(",light:");
+  Serial.println(analogRead(A0));
+  delay(10);                                    // ≈ 100 Hz
+}`}
+];
+function renderExamples(){
+  const box=$('examples'); box.innerHTML='';
+  EXAMPLES.forEach(ex=>{
+    const d=document.createElement('div'); d.className='ex';
+    const hd=document.createElement('div'); hd.className='hd';
+    const b=document.createElement('b'); b.textContent=t(ex.t);
+    const btn=document.createElement('button'); btn.textContent=t('copy');
+    btn.onclick=async()=>{ try{ await navigator.clipboard.writeText(ex.code); btn.textContent=t('copied'); setTimeout(()=>btn.textContent=t('copy'),1500); }catch(e){} };
+    hd.append(b,btn);
+    const h=document.createElement('div'); h.className='hint'; h.textContent=t(ex.h);
+    const pre=document.createElement('pre'); pre.className='code'; pre.textContent=ex.code;
+    d.append(hd,h,pre); box.appendChild(d);
+  });
+}
+
+/* ================= Main loop ================= */
+function loop(){
   const view=$('selView').value;
-  if(S.analyser && !S.frozen){
-    S.analyser.getFloatFrequencyData(S.freq);
-    S.analyser.getFloatTimeDomainData(S.time);
-    if(S.hold) for(let i=0;i<S.freq.length;i++) if(S.freq[i]>S.hold[i]) S.hold[i]=S.freq[i];
-    updateReadouts();
-    if(view==='sgram') pushSgColumn();
-    if(view==='wf' && (S.wfCount=(S.wfCount||0)+1) % (+$('selWfSpeed').value) === 0) pushWfLine();
+  S.A=getSrc();
+  if(S.A){
+    const half=S.A.n/2;
+    if(!S.freq || S.freq.length!==half || S.time.length!==S.A.n){
+      S.freq=new Float32Array(half).fill(-Infinity); S.time=new Float32Array(S.A.n);
+      S.hold=$('chkHold').checked?new Float32Array(half).fill(-Infinity):null;
+      SER.mag=null; SER.lastAn=-1; resetSg();
+    }
+  } else if(S.freq){ resetAnalysis(); }
+  const has=!!S.A;
+  if(has!==S.hadA){
+    S.hadA=has; $('btnFreeze').disabled=!has; $('btnCsv').disabled=!has;
+    if(!has) clearReadouts();
+    $('roRmsK').textContent=t(S.A?.ser?'levelSer':'level');
+  }
+  if(S.A && !S.frozen){
+    let fresh=true;
+    if(!S.A.ser){ S.analyser.getFloatFrequencyData(S.freq); S.analyser.getFloatTimeDomainData(S.time); }
+    else fresh=serAnalyze();
+    if(fresh){
+      if(S.hold) for(let i=0;i<S.freq.length;i++) if(S.freq[i]>S.hold[i]) S.hold[i]=S.freq[i];
+      updateReadouts();
+      if(view==='sgram') pushSgColumn();
+      if(view==='wf' && (++S.wfCount % (+$('selWfSpeed').value)) === 0) pushWfLine();
+    }
   }
   g.fillStyle=getCss('--plotbg'); g.fillRect(0,0,cv.width,cv.height);
   if(view==='spec') drawSpectrum(); else if(view==='sgram') drawSpectrogram(); else if(view==='wf') drawWaterfall(); else drawWave();
+  drawSerPlot();
   requestAnimationFrame(loop);
 }
 
 /* ================= Init ================= */
 (function init(){
   if(!navigator.mediaDevices?.getUserMedia) setStatus('unsupported','err');
-  applyLang(); refreshDevices(); updateUI(); resizeCanvas();
+  if(!serSupported()){ $('serUnsup').style.display='block'; }
+  applyLang(); refreshDevices(); updateUI(); serUpdateUI(); resizeCanvas(); resizeSer();
   requestAnimationFrame(loop);
 })();
 </script>
